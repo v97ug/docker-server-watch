@@ -20,12 +20,14 @@ finally() {
 trap 'finally' {1,2,3,15}
 
 curl -X POST --data-urlencode 'payload={"channel": "'$CHANNEL'", "username": "PINGさん", "text": "'$DT' これから ホスト['$HOST']を監視します", "icon_emoji": ":desktop_computer:"}' $WEBHOOK_URL
+echo -n -e "\n"
 
 while :
 do
     i=0
     STATUS=`curl -4 --head -LI ${HOST} -o /dev/null -w '%{http_code}\n' -s`
-    echo $STATUS
+    LOG_TEXT="HTTP status code: ${STATUS} [`date "+%Y年%m月%d日%H時%M分%S秒"`]"
+    echo $LOG_TEXT | tee -a example.log
     IS_ENTER_MYSQL=`docker exec $DB_CONTAINER_NAME bash 2>&1`
     echo $IS_ENTER_MYSQL
 
@@ -39,6 +41,7 @@ do
       DT=`date "+%Y年%m月%d日%H時%M分%S秒"`
       echo $DT
       curl -X POST --data-urlencode 'payload={"channel": "'$CHANNEL'", "username": "CURLさん", "text": "'$DT' status code '$STATUS' ホスト['$HOST']が落ちたの", "icon_emoji": ":ghost:"}' $WEBHOOK_URL
+      echo -n -e "\n"
 
       cd $DEPLOY_PATH
       docker-compose up -d
